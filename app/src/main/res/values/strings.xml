@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">AntPlus2NIXConverter</string>
+    <string name="action_settings">Settings</string>
+    <string name="ulozeniNadpis">Vyber misto ulozeni</string>
+
+    <string-array name="mistoUlozeni">
+        <item>Do vnitrni pameti telefonu</item>
+        <item>Na SD kartu</item>
+    </string-array>
+</resources>
