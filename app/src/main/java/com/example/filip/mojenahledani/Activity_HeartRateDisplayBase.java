@@ -15,10 +15,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dsi.ant.plugins.antplus.pcc.AntPlusHeartRatePcc;
+import com.dsi.ant.plugins.antplus.pcc.defines.BatteryStatus;
 import com.dsi.ant.plugins.antplus.pcc.defines.DeviceState;
 import com.dsi.ant.plugins.antplus.pcc.defines.EventFlag;
 import com.dsi.ant.plugins.antplus.pcc.defines.RequestAccessResult;
 import com.dsi.ant.plugins.antplus.pccbase.AntPluginPcc;
+import com.dsi.ant.plugins.antplus.pccbase.AntPlusCommonPcc;
 import com.dsi.ant.plugins.antplus.pccbase.AntPlusLegacyCommonPcc;
 import com.dsi.ant.plugins.antplus.pccbase.MultiDeviceSearch;
 import com.dsi.ant.plugins.antplus.pccbase.PccReleaseHandle;
@@ -49,8 +51,10 @@ public class Activity_HeartRateDisplayBase extends AppCompatActivity {
     Context context;
     String deviceName, deviceType;
     ArrayList<String> deviceState;
+    ArrayList<Integer> specificByte;
     int signalStrength = 1;
-    int deviceNumber, manufacturerID1;
+    int batteryStatus = 1;
+    int deviceNumber, manufacturerID1, productInformation;
     private GoogleApiClient client;
 
     /**
@@ -91,7 +95,6 @@ public class Activity_HeartRateDisplayBase extends AppCompatActivity {
                                                final BigDecimal heartBeatEventTime, final AntPlusHeartRatePcc.DataState dataState) {
                     final String textHeartRate = String.valueOf(computedHeartRate);
                     final String textHeartBeatCount = String.valueOf(heartBeatCount);
-                    final String textHeartBeatEventTime = String.valueOf(heartBeatEventTime);
                     deviceState.add(dataState.toString());
                     runOnUiThread(new Runnable() {
                         @Override
@@ -101,8 +104,6 @@ public class Activity_HeartRateDisplayBase extends AppCompatActivity {
                                 heartRateList.add(Integer.parseInt(textHeartRate));
                                 tv_heartBeatCounter.setText(textHeartBeatCount);
                                 beatCounterList.add(Integer.parseInt(textHeartBeatCount));
-                                tv_beatTime.setText(textHeartBeatEventTime);
-                                beatTimeList.add(Double.parseDouble(textHeartBeatEventTime));
                                 tv_status.setText(dataState.toString());
                             }
                         }
@@ -123,6 +124,28 @@ public class Activity_HeartRateDisplayBase extends AppCompatActivity {
                     public void run()
                     {
                         manufacturerID1 = manufacturerID;
+                        productInformation = serialNumber;
+                    }
+                });
+            }
+        });
+
+        hrPcc.subscribePage4AddtDataEvent(new AntPlusHeartRatePcc.IPage4AddtDataReceiver()
+        {
+            @Override
+            public void onNewPage4AddtData(final long estTimestamp, final EnumSet<EventFlag> eventFlags,
+                                           final int manufacturerSpecificByte,
+                                           final BigDecimal previousHeartBeatEventTime)
+            {
+                final String textHeartBeatEventTime = String.valueOf(previousHeartBeatEventTime);
+                runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        tv_beatTime.setText(textHeartBeatEventTime);
+                        beatTimeList.add(Double.parseDouble(textHeartBeatEventTime));
+                        specificByte.add(manufacturerSpecificByte);
                     }
                 });
             }
@@ -157,6 +180,14 @@ public class Activity_HeartRateDisplayBase extends AppCompatActivity {
         intent.putExtra("beatCounter", beatCounterList);
         intent.putExtra("beatTime", beatTimeList);
         intent.putExtra("deviceName", deviceName);
+        intent.putExtra("deviceNumber", deviceNumber);
+        intent.putExtra("deviceType", deviceType);
+        intent.putExtra("manufacturerID", manufacturerID1);
+        intent.putExtra("signalStrength", signalStrength);
+        intent.putExtra("deviceState", deviceState);
+        intent.putExtra("batteryStatus", batteryStatus);
+        intent.putExtra("specificByte", specificByte);
+        intent.putExtra("productInformation", productInformation);
         startActivity(intent);
     }
 
@@ -227,7 +258,6 @@ public class Activity_HeartRateDisplayBase extends AppCompatActivity {
 
                 }
             };
-
 
     @Override
     public void onStart() {

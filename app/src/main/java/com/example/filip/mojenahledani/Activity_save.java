@@ -24,6 +24,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import cz.zcu.AntPlus2NIXConverter.Data.OdMLData;
+import cz.zcu.AntPlus2NIXConverter.Profiles.AntHeartRate;
+
 
 /***
  * Vyctovy typ modu ulozeni. Do externi pameti telefonu nebo do interni pameti telefonu.
@@ -46,6 +49,7 @@ public class Activity_save extends AppCompatActivity {
     TextView computedHeartRateTV, heartBeatCounterTV, beatTimeTV;
     int[] heartBeatCounter;
     double[] timeOfPreviousHeartBeat;
+    Intent i;
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -83,26 +87,24 @@ public class Activity_save extends AppCompatActivity {
         computedHeartRateTV = (TextView) findViewById(R.id.textView);
         heartBeatCounterTV = (TextView) findViewById(R.id.textView7);
         beatTimeTV = (TextView) findViewById(R.id.textView8);
-        Intent i = getIntent();
-
+        i = getIntent();
         computedHeartRateList = i.getIntegerArrayListExtra("heartRate");
-        computedHeartRateList = modifyListInt(computedHeartRateList);
-        computedHeartRateTV.setText(computedHeartRateList.toString());
+//        computedHeartRateList = modifyListInt(computedHeartRateList);
+//        computedHeartRateTV.setText(computedHeartRateList.toString());
 
         heartBeatCounterList = i.getIntegerArrayListExtra("beatCounter");
-        heartBeatCounterList = modifyListInt(heartBeatCounterList);
-        heartBeatCounterTV.setText(heartBeatCounterList.toString());
+//        heartBeatCounterList = modifyListInt(heartBeatCounterList);
+//        heartBeatCounterTV.setText(heartBeatCounterList.toString());
 
         beatTimeList = (ArrayList<Double>) i.getSerializableExtra("beatTime");
-        beatTimeList = modifyListDouble(beatTimeList);
-        beatTimeTV.setText(beatTimeList.toString());
+//        beatTimeList = modifyListDouble(beatTimeList);
+//       beatTimeTV.setText(beatTimeList.toString());
         createSpinner();
 
         computedHeartRate = convertToArrayInt(computedHeartRateList);
         heartBeatCounter = convertToArrayInt(heartBeatCounterList);
         timeOfPreviousHeartBeat = convertToArrayDouble(beatTimeList);
 
-        Toast.makeText(Activity_save.this, i.getStringExtra("deviceName"), Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -155,19 +157,42 @@ public class Activity_save extends AppCompatActivity {
         return modified;
     }
 
+    public ArrayList<String> modifyListString(ArrayList<String> list) {
+        ArrayList<String> modified = new ArrayList<String>();
+        modified.add(list.get(0));
+        for (int i = 1; i < list.size(); i++) {
+            if (list.get(i - 1).equals(list.get(i)) == false) {
+                modified.add(list.get(i));
+            }
+        }
+        return modified;
+    }
+
     public int[] convertToArrayInt(ArrayList<Integer> list){
-        int[] array = new int[list.size()];
+        ArrayList<Integer> modified = modifyListInt(list);
+        int[] array = new int[modified.size()];
         for(int i = 0; i < array.length; i++){
-            array[i] = list.get(i);
+            array[i] = modified.get(i);
         }
 
         return array;
     }
 
     public double[] convertToArrayDouble(ArrayList<Double> list){
-        double[] array = new double[list.size()];
+        ArrayList<Double> modified = modifyListDouble(list);
+        double[] array = new double[modified.size()];
         for(int i = 0; i < array.length; i++){
-            array[i] = list.get(i);
+            array[i] = modified.get(i);
+        }
+
+        return array;
+    }
+
+    public String[] convertToArrayString(ArrayList<String> list){
+        ArrayList<String> modified = modifyListString(list);
+        String[] array = new String[modified.size()];
+        for(int i = 0; i < array.length; i++){
+            array[i] = modified.get(i);
         }
 
         return array;
@@ -179,12 +204,27 @@ public class Activity_save extends AppCompatActivity {
      * @param v
      */
     public void save(View v){
-        FileOutputStream output;
+        String deviceName = i.getStringExtra("deviceName");
+        String deviceType = i.getStringExtra("deviceType");
+        ArrayList<String> deviceState = i.getStringArrayListExtra("deviceState");
+        ArrayList<Integer> specificByte = i.getIntegerArrayListExtra("specificByte");
+        int signalStrength = i.getIntExtra("signalStrength", 1);
+        int batteryStatus = i.getIntExtra("batteryStatus", 1);
+        int deviceNumber = i.getIntExtra("deviceNumber", 1);
+        int manufacturerID = i.getIntExtra("manufacturerID", 1);
+        int productInformation = i.getIntExtra("productInformation", 1);
+
+        int[] specificByteArray = convertToArrayInt(specificByte);
+        String[] deviceStateString = convertToArrayString(deviceState);
+
+        OdMLData odml = new OdMLData(deviceName, deviceType, deviceStateString, deviceNumber, batteryStatus, signalStrength, manufacturerID, specificByteArray, productInformation);
+        AntHeartRate heartRate = new AntHeartRate(heartBeatCounter, computedHeartRate, timeOfPreviousHeartBeat, odml);
 
         if(mode == SaveMode.INTERNAL) {
             try {
-                org.g_node.nix.File f = org.g_node.nix.File.open("smrdis.h5", FileMode.Overwrite);
                 Toast.makeText(this, "ulozeno do: " + getFilesDir().getPath(), Toast.LENGTH_LONG).show();
+                org.g_node.nix.File file = org.g_node.nix.File.open(getFilesDir().getPath() + "heartRate.h5", FileMode.Overwrite);
+                heartRate.fillNixFile(file);
             } catch (Exception e) {
 
             }
@@ -194,7 +234,8 @@ public class Activity_save extends AppCompatActivity {
             if (Environment.MEDIA_MOUNTED.equals(state)) {
                 try {
                     Toast.makeText(this, "ulozeno do: " + Environment.getExternalStorageDirectory().getPath(), Toast.LENGTH_LONG).show();
-
+                    org.g_node.nix.File file = org.g_node.nix.File.open(Environment.getExternalStorageDirectory().getPath() + "heartRate.h5", FileMode.Overwrite);
+                    heartRate.fillNixFile(file);
                 } catch (Exception e) {
 
                 }
