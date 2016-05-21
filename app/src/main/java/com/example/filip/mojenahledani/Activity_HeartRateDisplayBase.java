@@ -165,7 +165,6 @@ public class Activity_HeartRateDisplayBase extends AppCompatActivity {
         endBT.setVisibility(View.VISIBLE);
         tv_status.setText("Prenos zastaven");
         tv_computedHeartRate.setText("Trenink ukoncen");
-        Toast.makeText(this, deviceType, Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -203,6 +202,8 @@ public class Activity_HeartRateDisplayBase extends AppCompatActivity {
         tv_heartBeatCounter = (TextView) findViewById(R.id.textView5);
         tv_beatTime = (TextView) findViewById(R.id.textView6);
         deviceState = new ArrayList<String>();
+        specificByte = new ArrayList<>();
+
     }
 
     /**
@@ -230,7 +231,7 @@ public class Activity_HeartRateDisplayBase extends AppCompatActivity {
                                     time.setBase(SystemClock.elapsedRealtime());
                                     time.start();
                                     subscribeToHrEvents();
-                                }
+                               }
                             });
                             break;
                         default:
