@@ -46,7 +46,6 @@ public class Activity_save extends AppCompatActivity {
     int[] computedHeartRate;
     ArrayList<Integer> computedHeartRateList, heartBeatCounterList;
     ArrayList<Double> beatTimeList;
-    TextView computedHeartRateTV, heartBeatCounterTV, beatTimeTV;
     int[] heartBeatCounter;
     double[] timeOfPreviousHeartBeat;
     Intent i;
@@ -84,9 +83,6 @@ public class Activity_save extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pole);
         context = getApplicationContext();
-        computedHeartRateTV = (TextView) findViewById(R.id.textView);
-        heartBeatCounterTV = (TextView) findViewById(R.id.textView7);
-        beatTimeTV = (TextView) findViewById(R.id.textView8);
         i = getIntent();
         computedHeartRateList = i.getIntegerArrayListExtra("heartRate");
 //        computedHeartRateList = modifyListInt(computedHeartRateList);
